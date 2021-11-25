@@ -7,33 +7,43 @@ class MainWindow(QtWidgets.QMainWindow, Ui_QuickMail):
     def __init__(self, *args, obj=None, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
-        self.getConfig()
+        self._getConfig()
         self.setupWindow()
-        self.btn_parse_cred.released.connect(self.getConfig)
-        self.btn_send.released.connect(self.sendEmail)
+        self.btn_parse_cred.released.connect(self._getConfig)
+        self.btn_send.released.connect(self._sendEmail)
 
-    def getConfig(self):
+    def _getConfig(self):
         self.credentials = GetCredentials.getCredentials()
-        missing = GetCredentials.checkMissing(self.credentials, ('server', 'pw', 'login'))
+        missing = GetCredentials.checkMissing(self.credentials,
+                                              ('server', 'pw', 'login', 'recipient'))
         if len(missing) > 0:
-            self.label_1.setVisible(True)
-            self.label_1.setText(f'Missing credentials: {missing}')
-            self.credentials_ok = False
+            self._credentials_ok = False
             self.btn_send.setEnabled(False)
+            for i in [self.lbl_server, self.lbl_user, self.lbl_recipient]:
+                i.setText('credentials file not complete')
+            msgbox = QtWidgets.QMessageBox.critical(
+                self,
+                'Missing credentials',
+                f'Missing credentials: {missing}\nPlease edit the credentials file.',
+                buttons=QtWidgets.QMessageBox.Ok)
         else:
-            self.label_1.setVisible(False)
-            self.credentials_ok = True
+            self._credentials_ok = True
             self.btn_send.setEnabled(True)
+            self.lbl_server.setText(self.credentials['server'])
+            self.lbl_user.setText(self.credentials['login'])
+            self.lbl_recipient.setText(self.credentials['recipient'])
 
-    def setupWindow(self):
-        pass
-
-    def sendEmail(self):
+    def _sendEmail(self):
         txt = self.txt_mail.toPlainText()
-        if txt == '':
-            self.label_2.setText('No text input')
+        if len(txt) < 1:
+            msgbox = QtWidgets.QMessageBox.warning(
+                self,
+                'Empty message',
+                'The message box is empty, no message to be sent...',
+                buttons=QtWidgets.QMessageBox.Ok)
         else:
-            self.label_2.setText(txt)
+            pass
+            # self.send()
 
 
 app = QtWidgets.QApplication([])

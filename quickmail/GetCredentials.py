@@ -14,4 +14,4 @@ def getCredentials():
 
 
 def checkMissing(credentials: Dict, required: Tuple):
-    return [req for req in required if req not in credentials.keys()]
+    return [req for req in required if len(credentials[req]) < 1]
